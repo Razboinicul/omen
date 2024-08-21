@@ -1,26 +1,117 @@
 # bootstrap.yml
 
 description: |
-  This file orchestrates the setup and build process for the Omen OS project.
-  It imports necessary configurations and executes the defined actions to prepare the development environment.
+  This file orchestrates the build process for GCC and its dependencies. It includes installing system dependencies, downloading source packages, and building the GCC compiler.
 
 imports:
   - file: "bootstrap/deps.yml"
   - file: "bootstrap/setup.yml"
+  - file: "bootstrap/packages.yml"
 
 workflow:
   - step: "install_dependencies"
-    description: "Install system dependencies based on the detected operating system."
+    description: "Install system dependencies required for building GCC and its dependencies."
     actions:
       - action: install_deps
 
-  - step: "setup_project"
-    description: "Set up the Omen OS project by preparing the development environment."
+  - step: "prepare_source"
+    description: "Prepare source directories and download source packages for GCC and its dependencies."
     actions:
-      - action: setup_project
+      - run: |
+          # Create directories for sources and builds
+          mkdir -p sources/{build,packages}
+          cd sources/packages
 
-  - step: "run"
-    description: "Run build."
+      - run: |
+          # Download source packages for dependencies and GCC
+          curl -L -o gcc-12.2.0.tar.gz 'https://ftp.gnu.org/gnu/gcc/gcc-12.2.0/gcc-12.2.0.tar.gz'
+          curl -L -o gmp-6.2.1.tar.xz 'https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz'
+          curl -L -o mpfr-4.2.0.tar.xz 'https://www.mpfr.org/mpfr-current/mpfr-4.2.0.tar.xz'
+          curl -L -o mpc-1.2.1.tar.gz 'https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz'
+
+  - step: "build_dependencies"
+    description: "Build and install required libraries for GCC."
     actions:
-      - say: "The project setup is complete. You can now start developing in the 'omen' directory."
-      - run: "make gpt"
+      - name: gmp
+        source:
+          subdir: 'sources/packages'
+          url: 'gmp-6.2.1.tar.xz'
+          extract_path: 'gmp-6.2.1'
+          format: 'tar.xz'
+          version: '6.2.1'
+        configure:
+          - args:
+            - './configure'
+            - '--prefix=/usr'
+        build:
+          - args: ['make', '-j@PARALLELISM@']
+        install:
+          - args: ['make', 'DESTDIR=@THIS_COLLECT_DIR@', 'install']
+
+      - name: mpfr
+        source:
+          subdir: 'sources/packages'
+          url: 'mpfr-4.2.0.tar.xz'
+          extract_path: 'mpfr-4.2.0'
+          format: 'tar.xz'
+          version: '4.2.0'
+        configure:
+          - args:
+            - './configure'
+            - '--prefix=/usr'
+            - '--with-gmp=@BUILD_ROOT@/packages/gmp'
+        build:
+          - args: ['make', '-j@PARALLELISM@']
+        install:
+          - args: ['make', 'DESTDIR=@THIS_COLLECT_DIR@', 'install']
+
+      - name: mpc
+        source:
+          subdir: 'sources/packages'
+          url: 'mpc-1.2.1.tar.gz'
+          extract_path: 'mpc-1.2.1'
+          format: 'tar.gz'
+          version: '1.2.1'
+        configure:
+          - args:
+            - './configure'
+            - '--prefix=/usr'
+            - '--with-gmp=@BUILD_ROOT@/packages/gmp'
+        build:
+          - args: ['make', '-j@PARALLELISM@']
+        install:
+          - args: ['make', 'DESTDIR=@THIS_COLLECT_DIR@', 'install']
+
+  - step: "build_gcc"
+    description: "Build and install GCC using the prepared dependencies."
+    actions:
+      - name: gcc
+        source:
+          subdir: 'sources/packages'
+          url: 'gcc-12.2.0.tar.gz'
+          extract_path: 'gcc-12.2.0'
+          format: 'tar.gz'
+          version: '12.2.0'
+        configure:
+          - args:
+            - '../gcc-12.2.0/configure'
+            - '--prefix=/usr'
+            - '--disable-multilib'
+            - '--enable-languages=c,c++'
+            - '--with-arch=@OPTION:arch@'
+            - '--with-gmp=@BUILD_ROOT@/packages/gmp'
+            - '--with-mpfr=@BUILD_ROOT@/packages/mpfr'
+            - '--with-mpc=@BUILD_ROOT@/packages/mpc'
+          environ:
+            CC: "@OPTION:cc@"
+            CXX: "@OPTION:cxx@"
+        build:
+          - args: ['make', '-j@PARALLELISM@']
+        install:
+          - args: ['make', 'DESTDIR=@THIS_COLLECT_DIR@', 'install']
+
+  - step: "cleanup"
+    description: "Clean up temporary files and directories."
+    actions:
+      - run: |
+          rm -rf sources/packages

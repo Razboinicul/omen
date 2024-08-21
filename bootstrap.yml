@@ -1,0 +1,26 @@
+# bootstrap.yml
+
+description: |
+  This file orchestrates the setup and build process for the Omen OS project.
+  It imports necessary configurations and executes the defined actions to prepare the development environment.
+
+imports:
+  - file: "bootstrap/deps.yml"
+  - file: "bootstrap/setup.yml"
+
+workflow:
+  - step: "install_dependencies"
+    description: "Install system dependencies based on the detected operating system."
+    actions:
+      - action: install_deps
+
+  - step: "setup_project"
+    description: "Set up the Omen OS project by preparing the development environment."
+    actions:
+      - action: setup_project
+
+  - step: "run"
+    description: "Run build."
+    actions:
+      - say: "The project setup is complete. You can now start developing in the 'omen' directory."
+      - run: "make gpt"

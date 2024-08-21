@@ -1,0 +1,49 @@
+# bootstrap/deps.yml
+
+description: |
+  This file contains the logic to install the required dependencies
+  for the Omen OS project based on the detected operating system.
+
+install_deps:
+  description: "Install system dependencies required for building the Omen OS project."
+  steps:
+    - if: "[[ '$os' == 'ubuntu' ]]"
+      do:
+        - say: "Installing dependencies for Ubuntu"
+        - run: "sudo apt update && sudo apt install -y build-essential qemu-system qemu-system-x86 nasm make parted gdisk gdb tmux dosfstools tree git"
+    - if: "[[ '$os' == 'debian' ]]"
+      do:
+        - say: "Installing dependencies for Debian"
+        - run: "sudo apt update && sudo apt install -y build-essential qemu-system qemu-system-x86 nasm make parted gdisk gdb tmux dosfstools tree git"
+    - if: "[[ '$os' == 'arch' ]]"
+      do:
+        - say: "Installing dependencies for Arch"
+        - run: "sudo pacman -Syu --noconfirm base-devel qemu nasm make parted gdisk gdb tmux dosfstools tree git"
+    - if: "[[ '$os' == 'fedora' ]]"
+      do:
+        - say: "Installing dependencies for Fedora"
+        - run: "sudo dnf install -y @development-tools qemu-system-x86 nasm make parted gdisk gdb tmux dosfstools tree git"
+    - if: "[[ '$os' == 'centos' ]]"
+      do:
+        - say: "Installing dependencies for CentOS"
+        - run:
+            - "sudo yum groupinstall -y 'Development Tools'"
+            - "sudo yum install -y qemu-system-x86 nasm make parted gdisk gdb tmux dosfstools tree git"
+    - if: "[[ '$os' == 'rhel' ]]"
+      do:
+        - say: "Installing dependencies for RHEL"
+        - run:
+            - "sudo yum groupinstall -y 'Development Tools'"
+            - "sudo yum install -y qemu-system-x86 nasm make parted gdisk gdb tmux dosfstools tree git"
+    - if: "[[ '$os' == 'darwin' ]]"
+      do:
+        - say: "Installing dependencies for macOS"
+        - run:
+            - "xcode-select --install"
+            - "brew install qemu nasm make gdisk gdb tmux dosfstools tree git"
+    - if: "[[ '$os' == 'alpine' ]]"
+      do:
+        - say: "Installing dependencies for Alpine"
+        - run: "apk add build-base qemu-system-x86 nasm make parted gdisk gdb tmux dosfstools tree git"
+    - else:
+        - err: "Unsupported OS detected. Please install dependencies manually."

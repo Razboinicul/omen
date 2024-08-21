@@ -1,0 +1,30 @@
+# bootstrap/setup.yml
+
+description: |
+  This file contains the setup steps for configuring the Omen OS project.
+  It includes cloning the repository, setting up branches, and preparing the build environment.
+
+setup_project:
+  description: "Set up the Omen OS development environment."
+  steps:
+    - say: "Welcome to the Omen OS setup!"
+    - say: "Dependencies for this script are bash, git, and sudo."
+    - say: "The repository name is always 'omen'."
+    - prompt: "Press enter when you are ready"
+    - prompt: "Enter your GitHub username"
+      assign_to: "username"
+    - run: "git clone git@github.com:$username/omen.git"
+    - run: "cd omen"
+    - run: "git checkout develop"
+    - prompt: "Now name your new feature branch. Include 'feature/' at the beginning (e.g., feature/your-feature-name). Leave empty to skip."
+      assign_to: "featurename"
+    - if: "[[ ! -z '$featurename' ]]"
+      do:
+        - run: "git checkout -b $featurename"
+    - say: "Installing project dependencies."
+    - action: install_deps
+    - prompt: "If everything was installed correctly, press enter to continue with project setup."
+    - run: "make setup-gpt"
+    - prompt: "If the setup was successful, press enter to compile and run the project."
+    - run: "make gpt"
+    - say: "The project is ready. You can now open the 'omen' folder in your favorite IDE and start developing!"

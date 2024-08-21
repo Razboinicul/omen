@@ -1,0 +1,79 @@
+packages:
+  - name: gcc
+    source:
+      subdir: 'bundled'
+      url: 'https://ftp.gnu.org/gnu/gcc/gcc-12.2.0/gcc-12.2.0.tar.gz'
+      checksum: 'blake2b:79c9f7b92e2ecf07c885d451d118f9dbe16cb01e6fa0a9d51f9b22e11cb28e07'
+      extract_path: 'gcc-12.2.0'
+      format: 'tar.gz'
+      version: '12.2.0'
+    configure:
+      - args:
+        - '../gcc-12.2.0/configure'
+        - '--prefix=/usr'
+        - '--disable-multilib'
+        - '--enable-languages=c,c++'
+        - '--with-arch=@OPTION:arch@'
+        - '--with-gmp=@BUILD_ROOT@/packages/gmp'
+        - '--with-mpfr=@BUILD_ROOT@/packages/mpfr'
+        - '--with-mpc=@BUILD_ROOT@/packages/mpc'
+        environ:
+          CC: "@OPTION:cc@"
+          CXX: "@OPTION:cxx@"
+    build:
+      - args: ['make', '-j@PARALLELISM@']
+    install:
+      - args: ['make', 'DESTDIR=@THIS_COLLECT_DIR@', 'install']
+
+  - name: gmp
+    source:
+      subdir: 'bundled'
+      url: 'https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz'
+      checksum: 'blake2b:1a3da4a75423e51d14a3ea57f084388bf58ddacb4ed84c3f3f92e64a64c3d26'
+      extract_path: 'gmp-6.2.1'
+      format: 'tar.xz'
+      version: '6.2.1'
+    configure:
+      - args:
+        - './configure'
+        - '--prefix=/usr'
+    build:
+      - args: ['make', '-j@PARALLELISM@']
+    install:
+      - args: ['make', 'DESTDIR=@THIS_COLLECT_DIR@', 'install']
+
+  - name: mpfr
+    source:
+      subdir: 'bundled'
+      url: 'https://www.mpfr.org/mpfr-current/mpfr-4.2.0.tar.xz'
+      checksum: 'blake2b:6a2d716a51b593f4f84f56b84a78e2956b5d28cf92e3f7cfec41fdf55c8d0c69'
+      extract_path: 'mpfr-4.2.0'
+      format: 'tar.xz'
+      version: '4.2.0'
+    configure:
+      - args:
+        - './configure'
+        - '--prefix=/usr'
+        - '--with-gmp=@BUILD_ROOT@/packages/gmp'
+    build:
+      - args: ['make', '-j@PARALLELISM@']
+    install:
+      - args: ['make', 'DESTDIR=@THIS_COLLECT_DIR@', 'install']
+
+  - name: mpc
+    source:
+      subdir: 'bundled'
+      url: 'https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz'
+      checksum: 'blake2b:4e08c9a54a3d6edb4e9c7d6c89df43d95a08e9d3c9a28ec548af2b5e3f70c94e'
+      extract_path: 'mpc-1.2.1'
+      format: 'tar.gz'
+      version: '1.2.1'
+    configure:
+      - args:
+        - './configure'
+        - '--prefix=/usr'
+        - '--with-gmp=@BUILD_ROOT@/packages/gmp'
+    build:
+      - args: ['make', '-j@PARALLELISM@']
+    install:
+      - args: ['make', 'DESTDIR=@THIS_COLLECT_DIR@', 'install']
